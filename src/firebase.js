@@ -3,7 +3,7 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDKw_uJDVEf1nMEQvdp8HTa6uAkqw-8UpI",
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: "prosperledger-2066e.firebaseapp.com",
     projectId: "prosperledger-2066e",
     storageBucket: "prosperledger-2066e.firebasestorage.app",
