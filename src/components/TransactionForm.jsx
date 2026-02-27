@@ -1,18 +1,33 @@
-import React, { useState } from 'react';
-import { Smartphone, Banknote, CreditCard, Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, ArrowUpCircle, ArrowDownCircle, Smartphone, Banknote, CreditCard } from 'lucide-react';
 
 const incomeCategories = ['Web Design', 'Hosting', 'Product Sales', 'Tips/Gifts', 'Other Income'];
 const expenseCategories = ['Transport', 'Home/Family', 'Water Bill', 'Electricity', 'Data/Internet', 'Business Expense', 'Other Expense'];
 
-const TransactionForm = ({ onAddTransaction }) => {
+const TransactionForm = ({ onAddTransaction, initialData = null }) => {
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
-        type: 'income',
-        category: 'Web Design',
+        type: 'expense', // default based on initial state
+        category: expenseCategories[0],
         amount: '',
         method: 'Mobile Money',
         note: ''
     });
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                type: initialData.type || prev.type,
+                amount: initialData.amount || prev.amount,
+                category: initialData.category || prev.category,
+                method: initialData.method || prev.method,
+                note: initialData.note || prev.note
+            }));
+            // Smooth scroll to form when auto-filled
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    }, [initialData]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -59,7 +74,10 @@ const TransactionForm = ({ onAddTransaction }) => {
                     <button
                         type="button"
                         onClick={() => handleTypeChange('income')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${formData.type === 'income' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 shadow-sm' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${formData.type === 'income'
+                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 shadow-sm'
+                                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                            }`}
                     >
                         <ArrowUpCircle size={18} />
                         Income
@@ -67,7 +85,10 @@ const TransactionForm = ({ onAddTransaction }) => {
                     <button
                         type="button"
                         onClick={() => handleTypeChange('expense')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${formData.type === 'expense' ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200 shadow-sm' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${formData.type === 'expense'
+                                ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200 shadow-sm'
+                                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                            }`}
                     >
                         <ArrowDownCircle size={18} />
                         Expense
@@ -157,7 +178,9 @@ const TransactionForm = ({ onAddTransaction }) => {
                 <div className="pt-2">
                     <button
                         type="submit"
-                        className={`w-full py-4 rounded-xl font-bold text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${formData.type === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'
+                        className={`w-full py-4 rounded-xl font-bold text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${formData.type === 'income'
+                                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+                                : 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'
                             }`}
                     >
                         <Plus size={20} />

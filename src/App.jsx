@@ -8,6 +8,8 @@ import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import Login from './components/Login';
 import Settings from './components/Settings';
+import DebtorsCreditors from './components/DebtorsCreditors';
+import QuickActions from './components/QuickActions';
 
 function App() {
   const [transactions, setTransactions] = useState([]);
@@ -20,6 +22,9 @@ function App() {
 
   // Filtering State
   const [timeFilter, setTimeFilter] = useState('all'); // 'all', 'daily', 'weekly', 'monthly', 'yearly'
+
+  // Quick Action Autofill State
+  const [quickFillData, setQuickFillData] = useState(null);
 
   // Fetch config and transactions
   useEffect(() => {
@@ -72,12 +77,16 @@ function App() {
     setIsAuthenticated(false);
   };
 
-  const handleSaveSettings = async (newUsername, newPassword) => {
+  const handleSaveSettings = async (configData) => {
     try {
       const configRef = doc(db, 'config', 'admin');
       const newConfig = {
-        username: newUsername,
-        password: newPassword || adminConfig.password
+        ...adminConfig,
+        username: configData.username,
+        password: configData.password || adminConfig.password,
+        seedCash: configData.seedCash || 0,
+        seedBank: configData.seedBank || 0,
+        seedMobile: configData.seedMobile || 0
       };
       await setDoc(configRef, newConfig);
       setAdminConfig(newConfig);
@@ -99,7 +108,6 @@ function App() {
 
     return transactions.filter(t => {
       if (!t.date) return false;
-      // t.date is 'YYYY-MM-DD'
       const tDate = new Date(t.date).getTime();
 
       if (timeFilter === 'daily') return tDate >= startOfDay;
@@ -135,7 +143,16 @@ function App() {
       }
     });
 
-    const balance = income - expenses;
+    const seedCash = adminConfig.seedCash || 0;
+    const seedBank = adminConfig.seedBank || 0;
+    const seedMobile = adminConfig.seedMobile || 0;
+
+    const cashBalance = seedCash + cashIncome - cashExpense;
+    const bankBalance = seedBank + bankIncome - bankExpense;
+    const mobileBalance = seedMobile + mobileIncome - mobileExpense;
+
+    // Only total balance considers the seeds as well.
+    const balance = cashBalance + bankBalance + mobileBalance;
     const tithe = Math.max(0, balance) * 0.10;
 
     return {
@@ -143,11 +160,11 @@ function App() {
       expenses,
       balance,
       tithe,
-      cash: cashIncome - cashExpense,
-      bank: bankIncome - bankExpense,
-      mobile: mobileIncome - mobileExpense
+      cash: cashBalance,
+      bank: bankBalance,
+      mobile: mobileBalance
     };
-  }, [filteredTransactions]);
+  }, [filteredTransactions, adminConfig]);
 
   // Handlers
   const handleAddTransaction = async (formData) => {
@@ -244,8 +261,8 @@ function App() {
                 key={filter}
                 onClick={() => setTimeFilter(filter)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold capitalize whitespace-nowrap transition-all ${timeFilter === filter
-                    ? 'bg-gray-900 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100'
                   }`}
               >
                 {filter === 'all' ? 'All Time' : `This ${filter.replace('ly', '')}`}
@@ -288,10 +305,16 @@ function App() {
           </div>
         </section>
 
+        {/* Debtors & Creditors Dashboard */}
+        <section className="animate-in fade-in slide-in-from-bottom-7 duration-800">
+          <DebtorsCreditors />
+        </section>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in slide-in-from-bottom-8 duration-1000">
           {/* Input Form */}
           <div className="lg:col-span-4 lg:sticky lg:top-[120px] transition-all">
-            <TransactionForm onAddTransaction={handleAddTransaction} />
+            <QuickActions onActionClick={(data) => setQuickFillData({ ...data, _t: Date.now() })} />
+            <TransactionForm onAddTransaction={handleAddTransaction} initialData={quickFillData} />
           </div>
 
           {/* Transactions List */}
